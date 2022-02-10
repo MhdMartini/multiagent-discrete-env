@@ -1,8 +1,9 @@
 '''
 course - Fall 2021
 Code: Reza Ahmadzadeh
-restructured by: Mohamed Martini
-provided environments were wrapped to interface with the trainer and evaluator scripts
+repurposed by: Mohamed Martini
+provided environments were wrapped to follow the gym convention. Additionally, 
+multi-agent functionality is added.
 '''
 
 import numpy as np
@@ -27,34 +28,62 @@ Coll_small = np.array([[0, 0, 1, 2, 2, 1, 2, 2, 1, 2, 2, 1, 3, 0, 2],
 
 # Collision matrix for the large environment
 Coll_large = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 4, 4, 2, 2, 2, 2, 2, 4, 4, 1, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
-                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 4, 4, 4, 2, 2, 2, 4, 4, 4, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
-                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
-                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 4, 2, 2, 2, 2, 2, 4, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-                       [0, 0, 4, 2, 2, 2, 1, 0, 0, 0, 4, 2, 4, 4, 4, 4, 4, 2, 4, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 4, 2, 2, 2, 1, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 1, 3, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 4, 2, 2, 2, 1, 0, 0, 1, 4, 2, 4, 4, 4, 4, 4, 2, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2, 2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
-                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
-                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
-                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-                       [4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
-                       [2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 4, 4, 2, 2, 2, 2,
+                           2, 4, 4, 1, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
+                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 4, 4, 4, 2, 2, 2,
+                           4, 4, 4, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
+                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 1, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
+                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 4, 2, 2, 2, 2,
+                           2, 4, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+                           1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                       [0, 0, 4, 2, 2, 2, 1, 0, 0, 0, 4, 2, 4, 4, 4, 4,
+                           4, 2, 4, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 4, 2, 2, 2, 1, 0, 0, 0, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 0, 0, 0, 1, 3, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 4, 2, 2, 2, 1, 0, 0, 1, 4, 2, 4, 4, 4, 4,
+                           4, 2, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 2, 2, 2, 2, 2,
+                           2, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                           1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2,
+                           2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0,
+                           0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+                           0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                           0, 0, 0, 1, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
+                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+                           0, 0, 0, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
+                       [0, 0, 1, 5, 5, 5, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+                           0, 0, 0, 0, 0, 0, 1, 5, 5, 5, 1, 0, 0, 0],
+                       [0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+                           0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+                       [4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4,
+                           4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                       [2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2,
+                           2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
                        [2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]])
 
 
@@ -138,7 +167,8 @@ class MaEnv:
 
         # draw agents
         for agent_pos in self.s:
-            pg.draw.rect(self.screen, agent_color, (agent_pos[1] * SCALE, agent_pos[0] * SCALE, SCALE, SCALE))
+            pg.draw.rect(self.screen, agent_color,
+                         (agent_pos[1] * SCALE, agent_pos[0] * SCALE, SCALE, SCALE))
         pg.display.flip()
         return True
 
@@ -146,13 +176,16 @@ class MaEnv:
         for i in range(self.grid.shape[0]):
             for j in range(self.grid.shape[1]):
                 color = color_code[self.grid[i, j]]
-                pg.draw.rect(self.screen, color, (j * SCALE, i * SCALE, SCALE, SCALE))
+                pg.draw.rect(self.screen, color,
+                             (j * SCALE, i * SCALE, SCALE, SCALE))
         # Horizontal lines
         for i in range(self.nr + 1):
-            pg.draw.line(self.screen, line_color, (0, i * SCALE), (self.nc * SCALE, i * SCALE), 2)
+            pg.draw.line(self.screen, line_color, (0, i * SCALE),
+                         (self.nc * SCALE, i * SCALE), 2)
         # Vertical lines
         for i in range(self.nc + 1):
-            pg.draw.line(self.screen, line_color, (i * SCALE, 0), (i * SCALE, self.nr * SCALE), 2)
+            pg.draw.line(self.screen, line_color, (i * SCALE, 0),
+                         (i * SCALE, self.nr * SCALE), 2)
 
     def update_s0(self):
         """return a random initial state"""
@@ -161,7 +194,8 @@ class MaEnv:
         # # pick and update agent position
         avail_r, avail_c = np.where(self.grid == 0)
         idx = np.random.choice(avail_r.shape[0], size=self.n_agents)
-        self.s = np.vstack((avail_r[idx], avail_c[idx])).T.reshape((self.n_agents, self.actions_size))
+        self.s = np.vstack((avail_r[idx], avail_c[idx])).T.reshape(
+            (self.n_agents, self.actions_size))
         return self.s
 
     def step(self, a):
@@ -172,13 +206,14 @@ class MaEnv:
         target_pos = np.clip(target_pos, 0, self.nr - 1)
 
         # handle wall collisions
-        wall_clsns = [i for i in range(target_pos.shape[0]) if any((self.walls[:] == target_pos[i]).all(1))]
+        wall_clsns = [i for i in range(target_pos.shape[0]) if any(
+            (self.walls[:] == target_pos[i]).all(1))]
         target_pos[wall_clsns] = self.s[wall_clsns]
 
-        # handle terminal
+        # handle terminal - Change for your application
         terminal[np.unique(np.where(target_pos - self.goal == 0)[0])] = True
 
-        # handle reward
+        # handle reward - Change for your application
         ds = np.linalg.norm(self.s - self.goal, axis=1)
         dsp = np.linalg.norm(target_pos - self.goal, axis=1)
         reward = ds - dsp
@@ -205,15 +240,15 @@ class EnvNew1(MaEnv):
 
 
 if __name__ == "__main__":
-    # test environment
+    # test the environments
     RIGHT = [0, 1]
     LEFT = [0, -1]
     UP = [-1, 0]
     DOWN = [1, 0]
     ACTIONS = np.array([UP, DOWN, RIGHT, LEFT])
     n_agents = 20
-    # env = MaEnv(2, n_agents, ACTIONS, GOAL_S)
-    env = EnvNew1(2, n_agents, ACTIONS, GOAL_L)
+    # env = MaEnv(2, n_agents, ACTIONS, GOAL_S)  # small env
+    env = EnvNew1(2, n_agents, ACTIONS, GOAL_L)  # large env
     env.reset()
     for i in range(200):
         s, r, _ = env.step(np.random.choice(4, size=n_agents))
